@@ -1,0 +1,309 @@
+/*Total sales*/
+
+SELECT SUM(purchase_amount_usd) AS total_sales
+FROM shopping_trends
+
+________________________________________________________________________________________________
+
+/*Avg, max, min purchase amount by state*/
+
+SELECT location, AVG(purchase_amount_usd) as average_purchase_amount,
+MIN(purchase_amount_usd) AS min_purchase_amount, MAX(purchase_amount_usd) AS max_purchase_amount
+FROM shopping_trends
+GROUP BY location 
+ORDER BY AVG(purchase_amount_usd) DESC
+
+________________________________________________________________________________________________
+
+/*Sales by location*/
+
+SELECT location, SUM(purchase_amount_usd)
+FROM shopping_trends
+GROUP BY location
+ORDER BY SUM(purchase_amount_usd) DESC
+LIMIT 10
+
+________________________________________________________________________________________________
+
+/* Categories by sales amount*/
+
+SELECT category, SUM(purchase_amount_usd) as total_sum
+FROM shopping_trends
+GROUP BY category 
+ORDER BY SUM(purchase_amount_usd) DESC
+
+
+________________________________________________________________________________________________
+
+
+/*Top 5 items by sales*/
+
+SELECT item_purchased, SUM(purchase_amount_usd) as total_sum
+FROM shopping_trends
+GROUP BY item_purchased 
+ORDER BY SUM(purchase_amount_usd) DESC
+LIMIT 5
+
+________________________________________________________________________________________________
+
+
+/*Sales by gender*/
+
+SELECT gender, SUM(purchase_amount_usd) as total_sum
+FROM shopping_trends
+GROUP BY gender
+ORDER BY SUM(purchase_amount_usd) DESC
+
+________________________________________________________________________________________________
+
+
+/*Sales and average sales by age groups*/
+
+SELECT CASE WHEN age BETWEEN 18 AND 25 THEN '18-25'
+WHEN age BETWEEN 26 AND 35 THEN '26-35'
+WHEN age BETWEEN 36 AND 45 THEN '36-45'
+WHEN age BETWEEN 46 AND 55 THEN '46-55'
+WHEN age BETWEEN 56 AND 65 THEN '56-65'
+WHEN age > 65 THEN '65+'
+END AS age_groups,
+SUM(purchase_amount_usd) as total_sum, AVG(purchase_amount_usd) AS average_spent
+FROM shopping_trends
+GROUP BY age_groups
+ORDER BY age_groups ASC
+
+________________________________________________________________________________________________
+
+
+/*Total sales by season*/
+
+SELECT season,
+SUM(purchase_amount_usd) as total_sum
+FROM shopping_trends
+GROUP BY season
+ORDER BY SUM(purchase_amount_usd) DESC
+
+________________________________________________________________________________________________
+
+
+/*Sales by shipping type*/
+
+SELECT shipping_type,
+SUM(purchase_amount_usd) as total_sum
+FROM shopping_trends
+GROUP BY shipping_type
+ORDER BY SUM(purchase_amount_usd) DESC
+
+________________________________________________________________________________________________
+
+/*Shipping type by number of customers*/
+
+SELECT shipping_type,
+COUNT(customer_id) as count_customers
+FROM shopping_trends
+GROUP BY shipping_type
+ORDER BY COUNT(customer_id) DESC
+
+________________________________________________________________________________________________
+
+/*Sales by payment method*/
+
+SELECT payment_method,
+SUM(purchase_amount_usd) as total_sum
+FROM shopping_trends
+GROUP BY payment_method
+ORDER BY SUM(purchase_amount_usd) DESC
+
+________________________________________________________________________________________________
+
+/*Payment method by number of customers*/ 
+
+SELECT payment_method,
+COUNT(customer_id) as count_customers
+FROM shopping_trends
+GROUP BY payment_method
+ORDER BY COUNT(customer_id) DESC
+
+________________________________________________________________________________________________
+
+/*Gender by customer number*/
+
+SELECT gender, COUNT(customer_id) AS number_of_customers
+FROM shopping_trends
+GROUP BY gender
+
+________________________________________________________________________________________________
+
+/*Age groups by number of customers*/
+
+SELECT CASE WHEN age BETWEEN 18 AND 25 THEN '18-25'
+WHEN age BETWEEN 26 AND 35 THEN '26-35'
+WHEN age BETWEEN 36 AND 45 THEN '36-45'
+WHEN age BETWEEN 46 AND 55 THEN '46-55'
+WHEN age BETWEEN 56 AND 65 THEN '56-65'
+WHEN age > 65 THEN '65+'
+END AS age_groups,
+COUNT(customer_id) as number_customers
+FROM shopping_trends
+GROUP BY age_groups
+ORDER BY age_groups ASC
+
+________________________________________________________________________________________________
+
+/*Creating flags for customers - spender types by amount spent*/
+
+WITH total_spent AS 
+(
+SELECT customer_id,
+SUM (purchase_amount_usd) AS total_amount_spent
+FROM shopping_trends
+GROUP BY customer_id
+ORDER BY SUM (purchase_amount_usd)
+ )
+SELECT customer_id, total_amount_spent, 
+CASE WHEN total_amount_spent BETWEEN 0 AND 33 THEN 'Low_spender'
+WHEN total_amount_spent BETWEEN 34 AND 66 THEN 'Average_spender'
+WHEN total_amount_spent > 66 THEN 'High_spender'
+END AS spender_type
+FROM total_spent
+GROUP BY customer_id,total_amount_spent
+ORDER BY customer_id ASC
+
+
+/*Count of Spender types, using the query from above*/
+
+WITH total_spent AS 
+(
+SELECT customer_id,
+SUM (purchase_amount_usd) AS total_amount_spent
+FROM shopping_trends
+GROUP BY customer_id
+ORDER BY SUM (purchase_amount_usd)
+ ),
+ 
+spender_type_cte AS 
+(
+SELECT customer_id, total_amount_spent, 
+CASE WHEN total_amount_spent BETWEEN 0 AND 33 THEN 'Low_spender'
+WHEN total_amount_spent BETWEEN 34 AND 66 THEN 'Average_spender'
+WHEN total_amount_spent > 66 THEN 'High_spender'
+END AS spender_type
+FROM total_spent
+GROUP BY customer_id,total_amount_spent
+) 
+
+SELECT spender_type, COUNT(spender_type)
+FROM spender_type_cte
+GROUP BY spender_type
+
+________________________________________________________________________________________________
+
+/*Categories by number of customers*/
+
+SELECT category,
+COUNT (customer_id) AS total_customers
+FROM shopping_trends
+GROUP BY category
+ORDER BY COUNT (customer_id) DESC
+
+________________________________________________________________________________________________
+
+/*Creating flags for items looking at their purchase price*/
+
+SELECT item_purchased, purchase_amount_usd,
+CASE WHEN purchase_amount_usd BETWEEN 0 AND 33 THEN 'Low_range_product'
+WHEN purchase_amount_usd BETWEEN 34 AND 66 THEN 'Middle_range_product'
+WHEN purchase_amount_usd > 66 THEN 'High_range_product'
+END AS product_range
+FROM shopping_trends
+GROUP BY item_purchased, purchase_amount_usd
+
+/*Counting items of different ranges*/
+
+WITH cte AS 
+(SELECT item_purchased, purchase_amount_usd,
+CASE WHEN purchase_amount_usd BETWEEN 0 AND 33 THEN 'Low_range_product'
+WHEN purchase_amount_usd BETWEEN 34 AND 66 THEN 'Middle_range_product'
+WHEN purchase_amount_usd > 66 THEN 'High_range_product'
+ELSE 'No_range'
+END AS product_range
+FROM shopping_trends
+GROUP BY item_purchased, purchase_amount_usd)
+
+SELECT product_range, COUNT(product_range) AS range_type_count
+FROM cte
+GROUP BY product_range
+
+________________________________________________________________________________________________
+
+/*Categories of clothes by age groups (number of customers)*/
+
+WITH cte AS 
+(
+SELECT CASE WHEN age BETWEEN 18 AND 25 THEN '18-25'
+WHEN age BETWEEN 26 AND 35 THEN '26-35'
+WHEN age BETWEEN 36 AND 45 THEN '36-45'
+WHEN age BETWEEN 46 AND 55 THEN '46-55'
+WHEN age BETWEEN 56 AND 65 THEN '56-65'
+WHEN age > 65 THEN '65+'
+END AS age_groups,
+COUNT(customer_id) as number_customers, category
+FROM shopping_trends
+GROUP BY age_groups, category
+ORDER BY COUNT(customer_id) DESC
+	) 
+	
+	/*Filtering different age groups*/
+	
+	SELECT age_groups, number_customers, category
+	FROM cte 
+	WHERE age_groups = '26-35'
+	GROUP BY age_groups, number_customers, category
+
+________________________________________________________________________________________________
+
+/*Previous purchases (SUM) by age groups*/
+
+SELECT CASE WHEN age BETWEEN 18 AND 25 THEN '18-25'
+WHEN age BETWEEN 26 AND 35 THEN '26-35'
+WHEN age BETWEEN 36 AND 45 THEN '36-45'
+WHEN age BETWEEN 46 AND 55 THEN '46-55'
+WHEN age BETWEEN 56 AND 65 THEN '56-65'
+WHEN age > 65 THEN '65+'
+END AS age_groups,
+SUM(previous_purchases) as previous_purchases
+FROM shopping_trends
+GROUP BY age_groups
+ORDER BY SUM(previous_purchases) DESC
+	
+________________________________________________________________________________________________
+
+/*Previous purchases by gender*/
+
+SELECT gender,
+SUM(previous_purchases) as previous_purchases
+FROM shopping_trends
+GROUP BY gender
+ORDER BY SUM(previous_purchases) DESC
+	
+________________________________________________________________________________________________
+
+/*AVG purchase by state, MAX, MIN*/
+
+
+SELECT location, AVG(purchase_amount_usd) as average_purchase_amount, MIN(purchase_amount_usd) AS min_purchase_amount, 
+MAX(purchase_amount_usd) AS max_purchase_amount
+FROM shopping_trends
+GROUP BY location 
+ORDER BY location ASC
+
+________________________________________________________________________________________________
+
+/*Customer count – top 10 countries*/
+
+SELECT location, COUNT(customer_id)
+FROM shopping_trends
+GROUP BY location
+ORDER BY COUNT(customer_id) DESC
+LIMIT 10
+
+
