@@ -1,4 +1,4 @@
-# Shopping trends
+# Shopping trends - SQL/Tableau project
 
 ## Project overview: 
 The department store requires sales and customer profile analysis of the previous year. 
