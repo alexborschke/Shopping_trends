@@ -17,3 +17,5 @@ To help marketing and sales department with the next year planning: conduct a da
 - Determined which customers and how many are 'low-spenders', 'average-spenders' and 'high-spenders'
 - Determined which categories of products and how many are 'High-range', 'Average-range' and 'Low-range' 
 - Determined top 10 states by customer number and sales 
+
+[Tableau visualizations for Shopping trends](https://public.tableau.com/views/Shoppingtrends_16994768547370/Sales?:language=en-US&publish=yes&:display_count=n&:origin=viz_share_link)
